@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bangladesh Perpetual Calendar</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#006a4e">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BD Calendar">
+<style>
+:root{
+  --bg:#f6f7f4; --card:#fff; --ink:#1d2421; --muted:#68716c; --line:#e3e6e1;
+  --green:#006a4e; --green-soft:#e3f1ec; --red:#d4213d; --red-soft:#fde8eb;
+  --amber:#a86400; --amber-soft:#fdf1dc; --blue:#2b5fb4; --blue-soft:#e6eefb;
+  --weekend:#f3f5f2;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#121614;--card:#1b201d;--ink:#e8ece9;--muted:#9aa49e;--line:#2c332f;
+  --green:#3fbf8f;--green-soft:#173027;--red:#ff6b80;--red-soft:#3a1c22;
+  --amber:#f0b04a;--amber-soft:#3a2c14;--blue:#7fa8ef;--blue-soft:#1c2840;--weekend:#202622;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali","Nirmala UI",sans-serif}
+header{background:var(--green);color:#fff;padding:14px 16px 12px;position:sticky;top:0;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.wrap{max-width:1200px;margin:0 auto}
+.title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.title h1{margin:0;font-size:19px;font-weight:650}
+.title .sub{opacity:.85;font-size:13px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.yearbox{display:flex;align-items:center;background:rgba(255,255,255,.15);border-radius:10px;overflow:hidden}
+.yearbox button{background:none;border:0;color:#fff;font-size:20px;width:40px;height:40px;cursor:pointer}
+.yearbox button:hover{background:rgba(255,255,255,.15)}
+.yearbox input{width:84px;height:40px;border:0;background:#fff;color:#1d2421;text-align:center;font-size:18px;font-weight:650}
+.ctl{height:40px;border-radius:10px;border:0;background:rgba(255,255,255,.15);color:#fff;padding:0 12px;font-size:14px;cursor:pointer}
+.ctl:hover{background:rgba(255,255,255,.25)}
+select.ctl option{color:#1d2421}
+.bangla-year{font-size:13px;opacity:.9;margin-left:4px}
+main{padding:16px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);margin:0 0 14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:4px;display:inline-block}
+.months{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.month{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.month h2{margin:0 0 2px;font-size:16px;display:flex;justify-content:space-between;align-items:baseline}
+.month h2 small{font-weight:400;color:var(--muted);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:8px}
+.dow{font-size:11px;text-align:center;color:var(--muted);padding:2px 0;font-weight:600}
+.dow.we{color:var(--red)}
+.day{aspect-ratio:1/1.05;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;border:1px solid transparent;min-width:0}
+.day:hover{border-color:var(--green)}
+.day .g{font-size:15px;font-weight:600;line-height:1}
+.day .b{font-size:9.5px;color:var(--muted);margin-top:3px;line-height:1}
+.day.we{background:var(--weekend)}
+.day.we .g{color:var(--red)}
+.day.hol{background:var(--red-soft)}
+.day.hol .g{color:var(--red)}
+.day.exe{background:var(--amber-soft)}
+.day.exe .g{color:var(--amber)}
+.day.mine::after{content:"";position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--blue)}
+.day.today{outline:2px solid var(--green);outline-offset:-2px}
+.day.b1 .b{color:var(--green);font-weight:700}
+.empty{visibility:hidden}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:18px}
+.panel h3{margin:0 0 8px;font-size:16px}
+.hl{list-style:none;margin:0;padding:0;columns:2 320px;column-gap:24px}
+.hl li{break-inside:avoid;display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.hl .d{min-width:118px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tag{font-size:11px;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap}
+.tag.gen{background:var(--red-soft);color:var(--red)}
+.tag.exe{background:var(--amber-soft);color:var(--amber)}
+.tag.est{background:var(--line);color:var(--muted)}
+.tag.mine{background:var(--blue-soft);color:var(--blue)}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+dialog{border:0;border-radius:16px;padding:0;max-width:420px;width:calc(100% - 24px);background:var(--card);color:var(--ink);box-shadow:0 20px 50px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+.dh{background:var(--green);color:#fff;padding:14px 16px}
+.dh .big{font-size:20px;font-weight:650}
+.db{padding:14px 16px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row span:first-child{color:var(--muted)}
+.db textarea{width:100%;min-height:70px;margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;background:var(--bg);color:var(--ink)}
+.db label{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:8px}
+.btns{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.btn{border:0;border-radius:10px;padding:9px 14px;font:inherit;cursor:pointer;background:var(--line);color:var(--ink)}
+.btn.p{background:var(--green);color:#fff}
+.monthnav{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:760px;margin:0 auto 12px}
+.monthnav button{width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:24px;cursor:pointer}
+.monthnav button:hover{border-color:var(--green)}
+.monthnav .mt{text-align:center}
+.monthnav .mt b{display:block;font-size:22px}
+.monthnav .mt span{font-size:13px;color:var(--muted)}
+.months.single{grid-template-columns:1fr;max-width:760px;margin:0 auto}
+.months.single .month h2{display:none}
+.months.single .grid{gap:4px;margin-top:0}
+.months.single .dow{font-size:13px;padding:6px 0}
+.months.single .day{aspect-ratio:auto;min-height:74px;justify-content:flex-start;padding-top:8px}
+.months.single .day .g{font-size:20px}
+.months.single .day .b{font-size:11px;margin-top:4px}
+.months.single .day .hn{font-size:10px;line-height:1.15;margin-top:4px;text-align:center;padding:0 3px;color:inherit;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.day.hol .hn{color:var(--red)} .day.exe .hn{color:var(--amber)}
+.month h2.link{cursor:pointer} .month h2.link:hover{color:var(--green)}
+.monthnav.hide{display:none}
+@media (max-width:600px){
+  .months.single .day{min-height:58px;padding-top:6px}
+  .months.single .day .g{font-size:18px}
+  .months.single .day .hn{display:none}
+  .months.single .day.hol::before,.months.single .day.exe::before{content:"";position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;background:currentColor}
+  .months.single .day.hol::before{background:var(--red)} .months.single .day.exe::before{background:var(--amber)}
+  .monthnav .mt b{font-size:19px}
+}
+@media (max-width:600px){
+  main{padding:10px}
+  .months{grid-template-columns:1fr}
+  .day .g{font-size:16px}
+  .day .b{font-size:10px}
+  .title h1{font-size:17px}
+}
+@media print{
+  header{position:static;box-shadow:none}
+  .controls,.legend .noprint{display:none}
+  body{background:#fff}
+  .months{grid-template-columns:repeat(3,1fr);gap:8px}
+  .month{break-inside:avoid;padding:6px}
+  .panel{break-before:page}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="title">
+      <h1 id="h1">Bangladesh Perpetual Calendar</h1>
+      <span class="sub" id="sub"></span>
+    </div>
+    <div class="controls">
+      <div class="yearbox">
+        <button id="prev" aria-label="Previous year">‹</button>
+        <input id="year" type="number" min="1900" max="2100" inputmode="numeric" aria-label="Year">
+        <button id="next" aria-label="Next year">›</button>
+      </div>
+      <button class="ctl" id="todayBtn">Today</button>
+      <select class="ctl" id="view" aria-label="View">
+        <option value="month">Month view</option>
+        <option value="year">Year view</option>
+      </select>
+      <select class="ctl" id="weekStart" aria-label="Week starts on">
+        <option value="6">Week: Sat first</option>
+        <option value="0">Week: Sun first</option>
+      </select>
+      <select class="ctl" id="lang" aria-label="Language">
+        <option value="en">English</option>
+        <option value="bn">বাংলা</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="legend" id="legend"></div>
+  <div class="monthnav" id="monthnav">
+    <button id="mPrev" aria-label="Previous month">‹</button>
+    <div class="mt"><b id="mTitle"></b><span id="mSub"></span></div>
+    <button id="mNext" aria-label="Next month">›</button>
+  </div>
+  <div class="months" id="months"></div>
+
+  <section class="panel">
+    <h3 id="holTitle"></h3>
+    <ul class="hl" id="holList"></ul>
+    <p class="note" id="holNote"></p>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <div class="dh"><div class="big" id="dTitle"></div><div id="dSub"></div></div>
+  <div class="db">
+    <div id="dRows"></div>
+    <label><input type="checkbox" id="dHol"> <span id="dHolLbl"></span></label>
+    <textarea id="dNote"></textarea>
+    <div class="btns">
+      <button class="btn" id="dClose"></button>
+      <button class="btn p" id="dSave"></button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Text ---------- */
+const T = {
+  en:{title:"Bangladesh Perpetual Calendar", days:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
+    months:["January","February","March","April","May","June","July","August","September","October","November","December"],
+    today:"Today", print:"Print", holidays:"Public holidays", weekend:"Weekend (Fri–Sat)",
+    gen:"General holiday", exe:"Executive-order holiday", mine:"My note / holiday", b1:"1st of a Bangla month",
+    est:"estimated", official:"official", bangla:"Bangla date", hijri:"Hijri date", weekday:"Day",
+    addHol:"Mark as my holiday", notePh:"Add a personal note (birthday, event…)", save:"Save", close:"Close",
+    holTitle:y=>`Holidays in ${y}`, none:"No holidays found.",
+    noteOfficial:"Dates follow the government's official holiday list for this year. Moon-dependent dates may still shift by a day.",
+    noteEst:"Estimated: no official list is stored for this year. Fixed national days are exact; Islamic holidays are calculated (Bangladesh is usually one day after Saudi Arabia) and may differ by a day after moon sighting. Hindu and Buddhist holidays follow a lunar almanac and are only shown for years with an official list.",
+    by:"BS", hijriSuffix:"AH", monthView:"Month view", yearView:"Year view", holMonth:(m,y)=>`Holidays in ${m} ${y}`},
+  bn:{title:"বাংলাদেশ চিরস্থায়ী ক্যালেন্ডার", days:["রবি","সোম","মঙ্গল","বুধ","বৃহঃ","শুক্র","শনি"],
+    months:["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"],
+    today:"আজ", print:"প্রিন্ট", holidays:"সরকারি ছুটি", weekend:"সাপ্তাহিক ছুটি (শুক্র–শনি)",
+    gen:"সাধারণ ছুটি", exe:"নির্বাহী আদেশে ছুটি", mine:"আমার নোট / ছুটি", b1:"বাংলা মাসের ১ তারিখ",
+    est:"আনুমানিক", official:"সরকারি", bangla:"বাংলা তারিখ", hijri:"হিজরি তারিখ", weekday:"বার",
+    addHol:"আমার ছুটি হিসেবে চিহ্নিত করুন", notePh:"ব্যক্তিগত নোট লিখুন (জন্মদিন, অনুষ্ঠান…)", save:"সংরক্ষণ", close:"বন্ধ",
+    holTitle:y=>`${y} সালের ছুটি`, none:"কোনো ছুটি পাওয়া যায়নি।",
+    noteOfficial:"এই বছরের তারিখগুলো সরকারি ছুটির তালিকা অনুযায়ী। চাঁদ দেখার উপর নির্ভরশীল তারিখ এক দিন এদিক-ওদিক হতে পারে।",
+    noteEst:"আনুমানিক: এই বছরের সরকারি তালিকা সংরক্ষিত নেই। জাতীয় দিবসগুলো নির্ভুল; ইসলামি ছুটি হিসাব করে দেখানো হয়েছে এবং চাঁদ দেখা সাপেক্ষে এক দিন পরিবর্তন হতে পারে। হিন্দু ও বৌদ্ধ ছুটি পঞ্জিকা অনুযায়ী হয়, তাই কেবল সরকারি তালিকা থাকা বছরে দেখানো হয়।",
+    by:"বঙ্গাব্দ", hijriSuffix:"হিজরি", monthView:"মাসিক", yearView:"বার্ষিক", holMonth:(m,y)=>`${m} ${y} এর ছুটি`}
+};
+const BN_MONTHS = {
+  en:["Boishakh","Joishtho","Asharh","Srabon","Bhadro","Ashwin","Kartik","Agrahayan","Poush","Magh","Falgun","Choitro"],
+  bn:["বৈশাখ","জ্যৈষ্ঠ","আষাঢ়","শ্রাবণ","ভাদ্র","আশ্বিন","কার্তিক","অগ্রহায়ণ","পৌষ","মাঘ","ফাল্গুন","চৈত্র"]
+};
+const HIJRI_MONTHS = {
+  en:["Muharram","Safar","Rabi al-Awwal","Rabi al-Thani","Jumada al-Awwal","Jumada al-Thani","Rajab","Shaban","Ramadan","Shawwal","Dhul Qadah","Dhul Hijjah"],
+  bn:["মুহাররম","সফর","রবিউল আউয়াল","রবিউস সানি","জমাদিউল আউয়াল","জমাদিউস সানি","রজব","শাবান","রমজান","শাওয়াল","জিলকদ","জিলহজ"]
+};
+const WEEKDAY_FULL = {
+  en:["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+  bn:["রবিবার","সোমবার","মঙ্গলবার","বুধবার","বৃহস্পতিবার","শুক্রবার","শনিবার"]
+};
+const HN = { // holiday names
+  shaheed:["Shaheed Day & International Mother Language Day","শহীদ দিবস ও আন্তর্জাতিক মাতৃভাষা দিবস"],
+  indep:["Independence and National Day","স্বাধীনতা ও জাতীয় দিবস"],
+  boishakh:["Pohela Boishakh (Bangla New Year)","পহেলা বৈশাখ (বাংলা নববর্ষ)"],
+  may:["May Day","মে দিবস"],
+  july:["July Mass Uprising Day","জুলাই গণঅভ্যুত্থান দিবস"],
+  victory:["Victory Day","বিজয় দিবস"],
+  xmas:["Christmas Day","বড়দিন"],
+  barat:["Shab-e-Barat","শবে বরাত"],
+  qadr:["Shab-e-Qadr","শবে কদর"],
+  bida:["Jumatul Bida","জুমাতুল বিদা"],
+  fitr:["Eid ul-Fitr","ঈদুল ফিতর"],
+  fitrX:["Eid ul-Fitr holiday","ঈদুল ফিতরের ছুটি"],
+  adha:["Eid ul-Adha","ঈদুল আজহা"],
+  adhaX:["Eid ul-Adha holiday","ঈদুল আজহার ছুটি"],
+  ashura:["Ashura","আশুরা"],
+  milad:["Eid-e-Miladunnabi (PBUH)","ঈদে মিলাদুন্নবী (সা.)"],
+  buddha:["Buddha Purnima","বুদ্ধ পূর্ণিমা"],
+  janma:["Janmashtami","জন্মাষ্টমী"],
+  nabami:["Durga Puja (Maha Nabami)","দুর্গাপূজা (মহানবমী)"],
+  dashami:["Durga Puja (Bijoya Dashami)","দুর্গাপূজা (বিজয়া দশমী)"],
+  extra:["Additional holiday","অতিরিক্ত ছুটি"]
+};
+
+/* ---------- Official lists (Ministry of Public Administration) ---------- */
+// type: g = general, e = executive order
+const OFFICIAL = {
+  2026:[
+    ["02-04","barat","e"],["02-21","shaheed","g"],["03-17","qadr","e"],["03-18","extra","e"],
+    ["03-19","fitrX","e"],["03-20","bida","g"],["03-21","fitr","g"],["03-22","fitrX","e"],["03-23","fitrX","e"],
+    ["03-26","indep","g"],["04-14","boishakh","e"],["05-01","may","g"],["05-01","buddha","g"],
+    ["05-26","adhaX","e"],["05-27","adhaX","e"],["05-28","adha","g"],["05-29","adhaX","e"],["05-30","adhaX","e"],["05-31","adhaX","e"],
+    ["06-26","ashura","e"],["08-05","july","g"],["08-26","milad","g"],["09-04","janma","g"],
+    ["10-20","nabami","e"],["10-21","dashami","g"],["12-16","victory","g"],["12-25","xmas","g"]
+  ]
+};
+
+/* ---------- Helpers ---------- */
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,"0");
+const key = (y,m,d) => `${y}-${pad(m+1)}-${pad(d)}`;
+const BN_DIG = "০১২৩৪৫৬৭৮৯";
+let lang = "en";
+const num = n => lang==="bn" ? String(n).replace(/\d/g,d=>BN_DIG[d]) : String(n);
+const t = k => T[lang][k];
+const hname = id => HN[id][lang==="bn"?1:0];
+const utc = (y,m,d) => new Date(Date.UTC(y,m,d,12));
+const isLeap = y => (y%4===0 && y%100!==0) || y%400===0;
+
+/* Revised Bangla calendar (Bangla Academy, 2019): Boishakh–Ashwin 31 days,
+   Kartik–Magh & Choitro 30, Falgun 29 (30 in a Gregorian leap year). 1 Boishakh = 14 April. */
+function banglaDate(y,m,d){
+  const date = utc(y,m,d);
+  let startY = (m>3 || (m===3 && d>=14)) ? y : y-1;
+  const start = utc(startY,3,14);
+  let n = Math.round((date-start)/86400000);
+  const lens = [31,31,31,31,31,31,30,30,30,30, isLeap(startY+1)?30:29, 30];
+  let bm=0; while(n >= lens[bm]){ n -= lens[bm]; bm++; }
+  return {year:startY-593, month:bm, day:n+1};
+}
+
+/* Hijri date as observed in Bangladesh: Umm al-Qura shifted by an offset (default 1 day later). */
+let HIJRI_OFFSET = 1;
+const hijriFmt = (()=>{ try{ return new Intl.DateTimeFormat("en-u-ca-islamic-umalqura",{day:"numeric",month:"numeric",year:"numeric",timeZone:"UTC"}); }catch(e){ return null; }})();
+function hijriDate(y,m,d){
+  if(!hijriFmt) return null;
+  const parts = hijriFmt.formatToParts(utc(y,m,d-HIJRI_OFFSET));
+  const o={}; parts.forEach(p=>{ if(p.type!=="literal") o[p.type]=parseInt(p.value,10); });
+  if(!o.month) return null;
+  return {year:o.year, month:o.month-1, day:o.day};
+}
+
+/* ---------- Holiday computation ---------- */
+const cache = {};
+function holidays(y){
+  if(cache[y]) return cache[y];
+  const map = {}; // key -> [{id,type,est}]
+  const add = (k,id,type,est) => { (map[k] = map[k]||[]).push({id,type,est}); };
+  if(OFFICIAL[y]){
+    OFFICIAL[y].forEach(([md,id,type]) => add(`${y}-${md}`, id, type, false));
+  } else {
+    add(`${y}-02-21`,"shaheed","g",false);
+    add(`${y}-03-26`,"indep","g",false);
+    add(`${y}-04-14`,"boishakh","e",false);
+    add(`${y}-05-01`,"may","g",false);
+    if(y>=2025) add(`${y}-08-05`,"july","g",false);
+    add(`${y}-12-16`,"victory","g",false);
+    add(`${y}-12-25`,"xmas","g",false);
+    // Islamic holidays: scan the year
+    const targets = {"7-15":["barat","e"],"8-27":["qadr","e"],"9-1":["fitr","g"],"11-10":["adha","g"],"0-10":["ashura","e"],"2-12":["milad","g"]};
+    const fitrDays=[];
+    for(let m=0;m<12;m++){
+      const dim = new Date(Date.UTC(y,m+1,0)).getUTCDate();
+      for(let d=1; d<=dim; d++){
+        const h = hijriDate(y,m,d); if(!h) continue;
+        const tk = `${h.month}-${h.day}`;
+        if(targets[tk]){ add(key(y,m,d), targets[tk][0], targets[tk][1], true); if(tk==="9-1") fitrDays.push([m,d]); }
+      }
+    }
+    // Jumatul Bida: last Friday before Eid ul-Fitr
+    fitrDays.forEach(([m,d])=>{
+      for(let i=1;i<=7;i++){ const dt=utc(y,m,d-i); if(dt.getUTCDay()===5){ if(dt.getUTCFullYear()===y) add(key(y,dt.getUTCMonth(),dt.getUTCDate()),"bida","g",true); break; } }
+    });
+  }
+  return cache[y]=map;
+}
+
+/* ---------- Personal notes (stored in this browser) ---------- */
+const STORE="bdcal.notes.v1";
+let notes = {};
+try{ notes = JSON.parse(localStorage.getItem(STORE)||"{}")||{}; }catch(e){ notes={}; }
+function saveNotes(){ try{ localStorage.setItem(STORE, JSON.stringify(notes)); }catch(e){} }
+
+/* ---------- Render ---------- */
+let year, weekStart = 6, view = "month", month = new Date().getMonth();
+try{ const p=JSON.parse(localStorage.getItem("bdcal.prefs")||"{}"); if(p.lang) lang=p.lang; if(p.ws!==undefined) weekStart=p.ws; if(p.view) view=p.view; }catch(e){}
+function savePrefs(){ try{ localStorage.setItem("bdcal.prefs", JSON.stringify({lang, ws:weekStart, view})); }catch(e){} }
+
+const now = new Date();
+const todayKey = key(now.getFullYear(), now.getMonth(), now.getDate());
+
+function render(){
+  document.documentElement.lang = lang;
+  $("h1").textContent = t("title");
+  $("todayBtn").textContent = t("today");
+  $("year").value = year;
+  const b1 = banglaDate(year,0,1).year, b2 = banglaDate(year,11,31).year;
+  $("sub").textContent = `${num(b1)}–${num(b2)} ${t("by")}`;
+  document.title = `${t("title")} — ${year}`;
+
+  $("legend").innerHTML =
+    `<span><i class="sw" style="background:var(--red-soft);border:1px solid var(--red)"></i>${t("gen")}</span>`+
+    `<span><i class="sw" style="background:var(--amber-soft);border:1px solid var(--amber)"></i>${t("exe")}</span>`+
+    `<span><i class="sw" style="background:var(--weekend);border:1px solid var(--line)"></i>${t("weekend")}</span>`+
+    `<span><i class="sw" style="background:var(--blue);border-radius:50%;width:8px;height:8px"></i>${t("mine")}</span>`+
+    `<span style="color:var(--green);font-weight:600">${t("b1")}</span>`;
+
+  const hol = holidays(year);
+  const dowOrder = [...Array(7)].map((_,i)=>(weekStart+i)%7);
+  let html = "";
+  const single = view==="month";
+  $("months").classList.toggle("single", single);
+  $("monthnav").classList.toggle("hide", !single);
+  $("view").options[0].text = t("monthView"); $("view").options[1].text = t("yearView");
+  for(let m=(single?month:0); m<(single?month+1:12); m++){
+    const first = utc(year,m,1).getUTCDay();
+    const dim = new Date(Date.UTC(year,m+1,0)).getUTCDate();
+    const bs = banglaDate(year,m,1), be = banglaDate(year,m,dim);
+    const bmLabel = `${BN_MONTHS[lang][bs.month]}–${BN_MONTHS[lang][be.month]}`;
+    if(single){
+      $("mTitle").textContent = `${T[lang].months[m]} ${num(year)}`;
+      $("mSub").textContent = `${bmLabel} ${num(bs.year)}${be.year!==bs.year?"–"+num(be.year):""}`;
+    }
+    html += `<div class="month"><h2 class="link" data-m="${m}">${T[lang].months[m]} <small>${bmLabel}</small></h2><div class="grid">`;
+    dowOrder.forEach(w => html += `<div class="dow${w===5||w===6?" we":""}">${T[lang].days[w]}</div>`);
+    const lead = (first - weekStart + 7) % 7;
+    for(let i=0;i<lead;i++) html += `<div class="day empty"></div>`;
+    for(let d=1; d<=dim; d++){
+      const k = key(year,m,d), w = (first+d-1)%7, b = banglaDate(year,m,d);
+      const hs = hol[k]||[], n = notes[k];
+      let cls = "day";
+      if(w===5||w===6) cls+=" we";
+      if(hs.some(h=>h.type==="g")) cls+=" hol"; else if(hs.length) cls+=" exe";
+      if(n && n.hol && !hs.length) cls+=" hol";
+      if(n) cls+=" mine";
+      if(k===todayKey) cls+=" today";
+      if(b.day===1) cls+=" b1";
+      const tip = hs.map(h=>hname(h.id)).concat(n&&n.text?[n.text]:[]).join(" • ");
+      const bl = b.day===1 ? BN_MONTHS[lang][b.month].slice(0, lang==="bn"?4:3) : num(b.day);
+      html += `<div class="${cls}" data-k="${k}" title="${tip.replace(/"/g,"&quot;")}"><span class="g">${num(d)}</span><span class="b">${bl}</span>${single && (hs.length || (n&&n.hol)) ? `<span class="hn">${hs.length ? hname(hs[0].id) : (n.text||"").replace(/</g,"&lt;")}</span>` : ""}</div>`;
+    }
+    html += `</div></div>`;
+  }
+  $("months").innerHTML = html;
+
+  // Holiday list
+  $("holTitle").textContent = single ? T[lang].holMonth(T[lang].months[month], num(year)) : T[lang].holTitle(num(year));
+  let items = [];
+  Object.keys(hol).sort().forEach(k => hol[k].forEach(h => items.push({k, ...h})));
+  Object.keys(notes).filter(k=>k.startsWith(year+"-") && notes[k].hol).sort().forEach(k=>items.push({k,mine:true,text:notes[k].text}));
+  items.sort((a,b)=>a.k<b.k?-1:a.k>b.k?1:0);
+  if(single) items = items.filter(it => it.k.startsWith(`${year}-${pad(month+1)}-`));
+  $("holList").innerHTML = items.length ? items.map(it=>{
+    const [yy,mm,dd] = it.k.split("-").map(Number);
+    const w = utc(yy,mm-1,dd).getUTCDay();
+    const ds = `${num(dd)} ${T[lang].months[mm-1].slice(0, lang==="bn"?20:3)}, ${T[lang].days[w]}`;
+    if(it.mine) return `<li><span class="d">${ds}</span><span>${(it.text||t("mine")).replace(/</g,"&lt;")}<span class="tag mine">${t("mine")}</span></span></li>`;
+    return `<li><span class="d">${ds}</span><span>${hname(it.id)}<span class="tag ${it.type==="g"?"gen":"exe"}">${it.type==="g"?t("gen"):t("exe")}</span>${it.est?`<span class="tag est">${t("est")}</span>`:""}</span></li>`;
+  }).join("") : `<li>${t("none")}</li>`;
+  $("holNote").textContent = OFFICIAL[year] ? t("noteOfficial") : t("noteEst");
+}
+
+/* ---------- Day dialog ---------- */
+let openKey = null;
+function openDay(k){
+  openKey = k;
+  const [y,m,d] = k.split("-").map(Number);
+  const w = utc(y,m-1,d).getUTCDay();
+  const b = banglaDate(y,m-1,d), h = hijriDate(y,m-1,d);
+  $("dTitle").textContent = `${num(d)} ${T[lang].months[m-1]} ${num(y)}`;
+  $("dSub").textContent = WEEKDAY_FULL[lang][w];
+  const hs = holidays(y)[k]||[];
+  let rows = `<div class="row"><span>${t("bangla")}</span><span>${num(b.day)} ${BN_MONTHS[lang][b.month]} ${num(b.year)}</span></div>`;
+  if(h) rows += `<div class="row"><span>${t("hijri")}</span><span>${num(h.day)} ${HIJRI_MONTHS[lang][h.month]} ${num(h.year)} ${t("hijriSuffix")}</span></div>`;
+  hs.forEach(x => rows += `<div class="row"><span>${x.type==="g"?t("gen"):t("exe")}</span><span>${hname(x.id)}${x.est?` (${t("est")})`:""}</span></div>`);
+  $("dRows").innerHTML = rows;
+  const n = notes[k]||{};
+  $("dHol").checked = !!n.hol;
+  $("dHolLbl").textContent = t("addHol");
+  $("dNote").value = n.text||"";
+  $("dNote").placeholder = t("notePh");
+  $("dSave").textContent = t("save");
+  $("dClose").textContent = t("close");
+  if($("dlg").showModal) $("dlg").showModal(); else $("dlg").setAttribute("open","");
+}
+function closeDay(){ if($("dlg").close) $("dlg").close(); else $("dlg").removeAttribute("open"); }
+
+$("months").addEventListener("click", e => {
+  const h = e.target.closest("h2[data-m]");
+  if(h && view==="year"){ month=+h.dataset.m; view="month"; $("view").value="month"; savePrefs(); render(); window.scrollTo(0,0); return; }
+  const el = e.target.closest(".day[data-k]"); if(el) openDay(el.dataset.k); });
+$("dClose").onclick = closeDay;
+$("dSave").onclick = () => {
+  const text = $("dNote").value.trim(), hol = $("dHol").checked;
+  if(text || hol) notes[openKey] = {text, hol}; else delete notes[openKey];
+  saveNotes(); closeDay(); render();
+};
+
+/* ---------- Controls ---------- */
+function setYear(y){
+  y = parseInt(y,10); if(isNaN(y)) return;
+  year = Math.min(2100, Math.max(1900, y));
+  try{ history.replaceState(null,"","#"+year); }catch(e){}
+  render();
+}
+$("prev").onclick = () => setYear(year-1);
+$("next").onclick = () => setYear(year+1);
+$("year").addEventListener("change", e => setYear(e.target.value));
+$("year").addEventListener("keydown", e => { if(e.key==="Enter") setYear(e.target.value); });
+$("todayBtn").onclick = () => {
+  month = now.getMonth();
+  setYear(now.getFullYear());
+  const el = document.querySelector(".day.today");
+  if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
+};
+function shiftMonth(d){
+  let m = month + d, y = year;
+  if(m<0){ m=11; y--; } if(m>11){ m=0; y++; }
+  if(y<1900||y>2100) return;
+  month = m; setYear(y);
+}
+$("mPrev").onclick = () => shiftMonth(-1);
+$("mNext").onclick = () => shiftMonth(1);
+$("view").value = view;
+$("view").onchange = e => { view = e.target.value; savePrefs(); render(); };
+let tx=null, ty=null;
+$("months").addEventListener("touchstart", e => { tx=e.touches[0].clientX; ty=e.touches[0].clientY; }, {passive:true});
+$("months").addEventListener("touchend", e => {
+  if(tx===null || view!=="month") return;
+  const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty; tx=null;
+  if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5) shiftMonth(dx<0?1:-1);
+}, {passive:true});
+$("weekStart").value = String(weekStart);
+$("weekStart").onchange = e => { weekStart = +e.target.value; savePrefs(); render(); };
+$("lang").value = lang;
+$("lang").onchange = e => { lang = e.target.value; savePrefs(); render(); };
+document.addEventListener("keydown", e => {
+  if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA") return;
+  if(e.target.closest && e.target.closest("dialog")) return;
+  if(e.key==="ArrowLeft") view==="month" ? shiftMonth(-1) : setYear(year-1);
+  if(e.key==="ArrowRight") view==="month" ? shiftMonth(1) : setYear(year+1);
+});
+
+const hashY = parseInt((location.hash||"").slice(1),10);
+setYear(!isNaN(hashY) ? hashY : now.getFullYear());
+})();
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  try { navigator.serviceWorker.register("sw.js").catch(function(){}); } catch(e) {}
+}
+</script>
+</body>
+</html>
